@@ -29,7 +29,7 @@ class DeckMesa(ec.Baralho):
                 carta.pontos = int(carta.valor)
 
 
-
+# cria classe banca
 class Banca(ec.Jogador):
     def __init__(self):
         self.nome = 'Banca'
@@ -41,14 +41,40 @@ class Banca(ec.Jogador):
     
     def mostrar_pontos_banca(self):
         return (f'Pontos da {self.nome}: {self.mao[0].pontos}')
+    
+    def mostrar_pontos_bj(self):
+        self.pontos_mao = 0
+        for carta in self.mao:
+            if carta.valor == 'as': # se a carta e um as tem dois valores, [1, 11]
+                if self.pontos_mao < 22:
+                    self.pontos_mao += carta.pontos[1]
+                else:
+                    self.pontos_mao += carta.pontos[0]
+            else:
+                self.pontos_mao += carta.pontos
+        return (f'Pontos de {self.nome}: {self.pontos_mao}')
+    
+
+class Jogador(ec.Jogador):
+    def mostrar_pontos_bj(self):
+        self.pontos_mao = 0
+        for carta in self.mao:
+            if carta.valor == 'as': # se a carta e um as tem dois valores, [1, 11]
+                if self.pontos_mao <= 21:
+                    self.pontos_mao += carta.pontos[1]
+                else:
+                    self.pontos_mao += carta.pontos[0]
+            else:
+                self.pontos_mao += carta.pontos
+        return (f'Pontos de {self.nome}: {self.pontos_mao}')
 
 
 # Inicializacao do jogo
 print('BlackJack')
 print('~~~ Bem vindo ao canto mais animado da CLI ~~~')
-print('Jogo de BlackJack contra a banca, usando 4 baralhos')
+print('Jogo de BlackJack contra a banca, usando 4 baralhos\nA casa paga 3:2')
 nome_jogador = input(f'Qual o nome do jogador? ')
-jogador1 = ec.Jogador(nome_jogador, 1000)  # cria o jogador
+jogador1 = Jogador(nome_jogador, 1000)  # cria o jogador
 casa = Banca()  # cria a banca
 
 #cria e inicializa o deck de cartas
@@ -63,50 +89,116 @@ deck.embaralhar()
 deck.corte()
 deck.pontos()
 
-# definir_pontos(deck.cartas)
-
-while True:
-    aposta_minima = 10
-
+n_jogada = 1
+aposta_minima = 10
+esta_jogando = True
+while esta_jogando:
+    n_jogada += 1
     aposta_jogador = 0
+    print(f'Voce possui {jogador1.banco} creditos.')
     print(f'A aposta minima para esta rodada e {aposta_minima} creditos')
     while aposta_jogador < aposta_minima:
         aposta_jogador = int(input('Qual e sua aposta? '))
-    print('Apostas encerradas. As maos serao distribuidas agora.\n Cada jogador recebera 2 cartas.')
+    jogador1.apostar(aposta_jogador)
+    print('Apostas encerradas. As maos serao distribuidas agora.\nCada jogador recebera 2 cartas.')
 
     jogador1.pegar_cartas(2, deck)
     casa.pegar_cartas(2, deck)
 
+
     print(casa.mostrar_mao_banca())
     print(casa.mostrar_pontos_banca())
+    casa.mostrar_pontos_bj()  # sem o print nao retorna nada e contabiliza os pontos
     print(jogador1.mostrar_mao())
-    print(jogador1.mostrar_pontos())
+    print(jogador1.mostrar_pontos_bj())
 
-    jogada = input('''Defina sua jogada:\n
-    1 - Parar\n
-    2 - Desistir\n
-    3 - Dobrar\n
-    4 - Pedir
-    ''')
+    jogada = 1  # seta jogada
+    escolhendo_jogada = True
+    while escolhendo_jogada:
+        jogada = int(input('''Defina sua jogada:\n
+        1 - Parar
+        2 - Desistir
+        3 - Dobrar
+        4 - Pedir
+        5 - Sair
+        Sua jogada:'''))
+        if jogada == 1:
+            break
+        elif jogada == 2:
+            print(casa.mostrar_mao())
+            print(casa.mostrar_pontos_bj())
+            print(jogador1.mostrar_banco())
+            jogador1.limpar_mao()
+            casa.limpar_mao()
+            break
+        elif jogada == 3:
+            jogador1.apostar(aposta_jogador)
+            aposta_jogador += aposta_jogador
+            print('A aposta agora e de {aposta_jogador}')
+            jogador1.adicionar_cartas_mao(deck)
+            print(jogador1.mostrar_mao())
+            print(jogador1.mostrar_pontos_bj())
+        elif jogada == 4:
+            jogador1.adicionar_cartas_mao(deck)
+            print(jogador1.mostrar_mao())
+            print(jogador1.mostrar_pontos_bj())
+        else:
+            esta_jogando = False
+        
+        if jogador1.pontos_mao > 21:  # se o jogador estorou
+            print('Estourou! Voce perdeu a jogada.')
+            print(casa.mostrar_mao())
+            jogador1.limpar_mao()
+            print(jogador1.mostrar_banco())
+            continue
+        
 
-    break
-    
-    
-# carta1 = deck.cartas[0]
-# print(carta1.valor)
-# print(carta1.pontos)
+    while True:
+        while casa.pontos_mao <= 16:  # enquanto a casa nao chegar a 16 pontos
+            print(casa.mostrar_mao())
+            casa.adicionar_cartas_mao(deck)
+            print(casa.mostrar_mao())
+            print(casa.mostrar_pontos_bj())  # mostra automaticamente a mao e os pontos ate a condicao ser obedecida
+        if casa.pontos_mao > 21 and jogador1.pontos_mao <= 21:  # se a casa estorou e o jogador nao
+            aposta_jogador = aposta_jogador * 1.5
+            print(f'A {casa.nome} estorou!')
+            print(f'Voce ganhou {aposta_jogador}.')
+            jogador1.ganhar(aposta_jogador)
+            print(jogador1.mostrar_banco())
+        elif (casa.pontos_mao == jogador1.pontos_mao) or (casa.pontos_mao > 21):  # se ambos empataram ou estouraram
+            print(f'Empate')
+            print(casa.mostrar_mao())
+            print(casa.mostrar_pontos_bj())
+            jogador1.ganhar(aposta_jogador)
+            break
+        elif casa.pontos_mao < jogador1.pontos_mao:  # se o jogador ganhou
+            aposta_jogador = aposta_jogador * 1.5
+            print(f'Voce ganhou!')
+            print(f'Voce ganhou {aposta_jogador} creditos.')
+            jogador1.ganhar(aposta_jogador)
+            print(jogador1.mostrar_banco())
+        elif casa.pontos_mao > jogador1.pontos_mao :  # se a casa ganhou
+            print(f'Voce perdeu!')
+            print(casa.mostrar_mao())
+            print(casa.mostrar_pontos_bj())
+            break
+        print('A jogada acabou.')
+        print(jogador1.mostrar_banco())
+        break
+    if jogador1.banco <= 0:
+        print(f'O jogo terminou. O jogador {jogador1.nome} esta sem dinheiro.')
+        print(f'Foram jogadas {n_jogada} rodadas.')
+        break
+    elif len(deck.cartas) < 11:
+        print(f'O jogo terminou. Nao ha cartas suficientes para mais uma jogada.')
+        print(f'Foram jogadas {n_jogada} rodadas.')
+        print(jogador1.mostrar_banco())
+        break
+    else:
+        jogador1.limpar_mao()
+        casa.limpar_mao()
+        continue
 
-
-
-# estao_jogando = True
-
-# while estao_jogando:
-#     print(f'Voce possui {jogador1.banco} creditos')
-#     aposta = int(input('Quanto voce quer apostar?'))
-#     jogador1.pegar_cartas(2)
-#     casa.pegar_cartas(2)
-#     jogador1.apostar(aposta)
-#     casa.apostar()
 # TODO: programar o sistema de apostas, usar função ou classe?
 # TODO: programar o comportamento da banca dependendo do comportamento do jogador
 # TODO: condicoes de ganhar ou perder

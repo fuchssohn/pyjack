@@ -14,6 +14,9 @@ class Jogador():
         for item in range(self.qtd_cartas):
             self.mao.append(Baralho.dar_carta())
     
+    def adicionar_cartas_mao(self, Baralho):
+        self.mao.append(Baralho.dar_carta())
+    
     def apostar(self, valor_aposta):
         self.valor_aposta = valor_aposta
         self.banco -= self.valor_aposta
@@ -32,6 +35,13 @@ class Jogador():
         for carta in self.mao:
             self.pontos_mao += carta.pontos
         return (f'Pontos de {self.nome}: {self.pontos_mao}')
+    
+    def mostrar_banco(self):
+        return (f'Creditos de {self.nome}: {self.banco}')
+    
+    def ganhar(self, total_aposta):
+        self.total_aposta = total_aposta
+        self.banco += self.total_aposta
 
 
 class Carta():
