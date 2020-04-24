@@ -113,9 +113,8 @@ while esta_jogando:
     print(jogador1.mostrar_pontos_bj())
 
     jogada = 1  # seta jogada
-    escolhendo_jogada = True
-    while escolhendo_jogada:
-        jogada = int(input('''Defina sua jogada:\n
+    while True:
+        jogada = int(input('''Defina sua jogada:
         1 - Parar
         2 - Desistir
         3 - Dobrar
@@ -134,7 +133,7 @@ while esta_jogando:
         elif jogada == 3:
             jogador1.apostar(aposta_jogador)
             aposta_jogador += aposta_jogador
-            print('A aposta agora e de {aposta_jogador}')
+            print(f'A aposta agora e de {aposta_jogador}')
             jogador1.adicionar_cartas_mao(deck)
             print(jogador1.mostrar_mao())
             print(jogador1.mostrar_pontos_bj())
@@ -142,20 +141,26 @@ while esta_jogando:
             jogador1.adicionar_cartas_mao(deck)
             print(jogador1.mostrar_mao())
             print(jogador1.mostrar_pontos_bj())
-        else:
+        elif jogada == 5:
             esta_jogando = False
+            break
+
+        if jogador1.pontos_mao > 21:  # retira o jogador do loop e joga pro proximo pra finalizar o jogo
+            break
         
-        if jogador1.pontos_mao > 21:  # se o jogador estorou
+
+    while True:
+        if jogada == 2 or jogada == 5:
+            break
+        elif jogador1.pontos_mao > 21:  # se o jogador estorou
             print('Estourou! Voce perdeu a jogada.')
             print(casa.mostrar_mao())
             jogador1.limpar_mao()
             print(jogador1.mostrar_banco())
-            continue
-        
-
-    while True:
+            break
+        print(casa.mostrar_mao())
+        print(casa.mostrar_pontos_bj())
         while casa.pontos_mao <= 16:  # enquanto a casa nao chegar a 16 pontos
-            print(casa.mostrar_mao())
             casa.adicionar_cartas_mao(deck)
             print(casa.mostrar_mao())
             print(casa.mostrar_pontos_bj())  # mostra automaticamente a mao e os pontos ate a condicao ser obedecida
